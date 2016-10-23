@@ -38,4 +38,4 @@
                             fitting characters. Set this above 1 for higher
                             resolution.
 
-![](/ascii_mandelbrot.png)
+![](/example/ascii_mandelbrot.png)
