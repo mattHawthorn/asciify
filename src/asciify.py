@@ -5,8 +5,6 @@ from PIL import Image, ImageFont, ImageDraw
 from skimage.measure import *
 from numpy import array, argmax, argmin, log, abs, empty, uint8
 
-image_extensions = {'png','jpg','tif'}
-
 def char_chip(char,font,aspect=0.667,bg=255,fill=0,writes = 2,v_offset=-0.18):
     (w,h) = chip_size_from_font(font,aspect)
     image = Image.new("L",(w,h), color = bg)
@@ -113,7 +111,6 @@ def main():
     outname, ext = os.path.splitext(out_path)
     if ext == "":
         ext = ".png"
-    
     fontpath = config.font
     fontsize = config.size
     font_color = config.color
@@ -126,8 +123,8 @@ def main():
     font = ImageFont.truetype(fontpath, fontsize)
     chip_size = chip_size_from_font(font,aspect)
     
+    # generate the ascii printable-character chips
     printable_chars = bytes(range(32,127)).decode('ascii')
-    
     chips = {c:array(char_chip(c,font,aspect,bg,font_color,boldness)) for c in printable_chars}
     
     # load the input image
