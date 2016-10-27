@@ -1,4 +1,12 @@
 # asciify
+A command line script to turn images into ascii art
+
+### Dependencies:
+ - Python 3.4+
+ - PIL
+ - skimage
+ - numpy
+
 ### it's all in the docs:
 
     python3 asciify.py --help
