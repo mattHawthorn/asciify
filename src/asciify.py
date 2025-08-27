@@ -1,9 +1,13 @@
 #coding:utf-8
 
 import os, argparse
+import sys
+
 from PIL import Image, ImageFont, ImageDraw
-from skimage.measure import *
+from skimage.metrics import structural_similarity as compare_ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from numpy import array, argmax, argmin, log, abs, empty, uint8
+
 
 def char_chip(char,font,aspect=0.667,bg=255,fill=0,writes = 2,v_offset=-0.18):
     (w,h) = chip_size_from_font(font,aspect)
@@ -13,15 +17,19 @@ def char_chip(char,font,aspect=0.667,bg=255,fill=0,writes = 2,v_offset=-0.18):
         chip.text((int(0*w),int(v_offset*h)), char, fill=fill, font=font)
     return image
 
+
 def bw_char_chip(char,font):
     return char_chip(char,font,bg=255,fill=0)
+
 
 def wb_char_chip(char,font):
     return char_chip(char,font,bg=0,fill=255)
 
+
 def chip_size_from_font(font,aspect=0.667):
     size = font.size
     return (int(aspect*size),size)
+
 
 def optimal_resize(image,size):
     chip_w,chip_h = size
@@ -44,10 +52,12 @@ def optimal_resize(image,size):
         errors = abs(log([(w*h1)/(w1*h) for w1,h1 in resizes]))
         best_resize = resizes[argmin(errors)]
         return image.resize(best_resize)
-    
+
+
 def nearest_chip(chip,chip_dict,sim=compare_ssim):
     names,sims = zip(*((name,sim(array(chip),array(c))) for name,c in chip_dict.items()))
     return names[argmax(sims)]
+
 
 def nearest_chip_array(image,chip_dict,sim=compare_ssim):
     chip_h,chip_w = array(next(iter(chip_dict.values()))).shape
@@ -57,13 +67,15 @@ def nearest_chip_array(image,chip_dict,sim=compare_ssim):
     chips = array(image).reshape(n_h,chip_h,n_w,chip_w).swapaxes(1,2)
     return [[nearest_chip(chips[i,j,::],chip_dict,sim=sim) for j in range(chips.shape[1])] for i in range(chips.shape[0])]  
 
+
 def print_char_array(char_array,file):
     # char_array is assumed a list of lists, as in the output from nearest_chip_array
-    with open(file,'w') as f:
+    with file as f:
         for row in char_array:
             for char in row:
                 f.write(char)
             f.write("\n")
+
 
 def image_from_chars(char_array,chip_dict):
     char_array = array(char_array)
@@ -75,6 +87,7 @@ def image_from_chars(char_array,chip_dict):
         for j,w in enumerate(range(0,n_w*chip_w,chip_w)):
             image[h:(h+chip_h),w:(w+chip_w)] = chip_dict[char_array[i,j]]
     return Image.fromarray(image, "L")
+
 
 def expand_path(path):
     if ('~' in path):
@@ -89,11 +102,11 @@ def main():
                             help="The image to read in and asciify")
     argParser.add_argument("-o","--output",type=str,
                             help="Path to an image to write out to.\nText will also be written to this path with a .txt extension substituted")
-    argParser.add_argument("-f","--font",type=str, default = "cour.ttf",
+    argParser.add_argument("-f","--font",type=str, default = "src/cour.ttf",
                             help="The path to the ttf font to use.\nTraditionally, a monospace font is preferred.\nDefault is Courier")
     argParser.add_argument("-s","--size","--font-size",type=int,default=12,
                             help="The size of the font, roughly in pixels, to be overlaid on the image")
-    argParser.add_argument("-a","--aspect","--font-aspect",type=int,default=0.6,
+    argParser.add_argument("-a","--aspect","--font-aspect",type=float,default=0.6,
                             help="The preferred aspect ratio of character cells for the font, as a ratio of width to height. Default is 0.6")
     argParser.add_argument("--boldness",type=int,default=2,
                             help="The boldness of characters the ascii image.\nInt greater than 0 representing the number of times each char is burned onto the image")
@@ -122,11 +135,11 @@ def main():
     
     font = ImageFont.truetype(fontpath, fontsize)
     chip_size = chip_size_from_font(font,aspect)
-    
+
     # generate the ascii printable-character chips
     printable_chars = bytes(range(32,127)).decode('ascii')
     chips = {c:array(char_chip(c,font,aspect,bg,font_color,boldness)) for c in printable_chars}
-    
+
     # load the input image
     image = Image.open(image_path)
     # rescale the image to the preferred resolution
@@ -141,7 +154,7 @@ def main():
     # save the image
     ascii_art.save(outname + ext)
     # save the ascii text
-    print_char_array(chars, outname + ".txt")
+    print_char_array(chars, sys.stdout)
 
 
 if __name__ == '__main__':
