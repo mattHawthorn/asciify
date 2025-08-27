@@ -1,0 +1,14 @@
+# please refer to https://mise.jdx.dev/getting-started.html for help installing
+# and using mise
+#
+# to install everything listed below, run
+#
+#   $ mise install
+#
+# once you've done that, mise will helpfully manage what `python`, `java`, etc.
+# "means" when you are in a given directory
+
+[tools]
+python = "3.10"
+# To make sure `pre-commit` installs against a compatible Python.
+uv = "0.6.3"
